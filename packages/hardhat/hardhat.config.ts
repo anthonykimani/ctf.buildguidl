@@ -4,13 +4,16 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-chai-matchers";
 import "@typechain/hardhat";
+import "@nomicfoundation/hardhat-viem";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "@nomicfoundation/hardhat-verify";
 import "hardhat-deploy";
+import "@nomicfoundation/hardhat-toolbox-viem";
 import "hardhat-deploy-ethers";
 import { task } from "hardhat/config";
 import generateTsAbis from "./scripts/generateTsAbis";
+import { defineChain } from "viem";
 
 // If not set, it uses ours Alchemy's default API key.
 // You can get your own at https://dashboard.alchemyapi.io
@@ -23,6 +26,23 @@ const etherscanApiKey = process.env.ETHERSCAN_API_KEY || "DNXJA8RX2Q3VZ4URQIWP7Z
 
 const optimisticEtherscanApiKey = process.env.OPTIMISTIC_ETHERSCAN_API_KEY;
 
+// Define the local hardhat chain
+const hardhatLocal = defineChain({
+  id: 31337,
+  name: 'Hardhat',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Ether',
+    symbol: 'ETH',
+  },
+  rpcUrls: {
+    default: {
+      http: ['http://127.0.0.1:8545'],
+    },
+  },
+  testnet: true,
+});
+
 const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.20",
@@ -34,7 +54,6 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  defaultNetwork: "localhost",
   namedAccounts: {
     deployer: {
       // By default, it will take the first Hardhat account as the deployer
@@ -49,6 +68,11 @@ const config: HardhatUserConfig = {
         url: `https://eth-mainnet.alchemyapi.io/v2/${providerApiKey}`,
         enabled: process.env.MAINNET_FORKING_ENABLED === "true",
       },
+      chainId: 31337,
+    },
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      chainId: 31337,
     },
     optimism: {
       url: `https://opt-mainnet.g.alchemy.com/v2/${providerApiKey}`,
@@ -63,6 +87,13 @@ const config: HardhatUserConfig = {
     mainnet: {
       url: `https://eth-mainnet.alchemyapi.io/v2/${providerApiKey}`,
       accounts: [deployerPrivateKey],
+    },
+  },
+  // Add viem configuration with custom chain
+  viem: {
+    chains: {
+      hardhat: hardhatLocal,
+      localhost: hardhatLocal,
     },
   },
   // configuration for harhdat-verify plugin
